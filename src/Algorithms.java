@@ -7,69 +7,77 @@ import java.util.Map;
 /**
  * @author： Wang Zhe
  * @date： 2021/10/27 19:57
- * @description： TODO
+ * @description： implement TF-IDF
  * @modifiedBy：
  * @version: 1.0
  */
 public class Algorithms {
 
+    /**
+     * calculate tf value of each word
+     * @param map processed by mapReduce
+     * @return OuterLayerMap -> key:userId, value: InnerLayerMap
+     *         InnerLayerMap -> key:word, value: tf value
+     */
     public Map<String, Map<String, Double>> tf(Map<String, List<String>> map) {
         Map<String, Map<String, Double>> tfMap = new HashMap<>();
         for (Map.Entry<String, List<String>> entry1 : map.entrySet()) {
-            Map<String, Double> wordFrequencyMap = new HashMap<>();
             String userId = entry1.getKey();
             List<String> bodyList = entry1.getValue();
             StringBuilder totalWordEachUserStr = new StringBuilder();
+            //Splice all posts from each user into String
             for (String s : bodyList) {
-                totalWordEachUserStr.append(" ").append(s);
+                totalWordEachUserStr.append(s);
             }
-            wordFrequencyMap = eachWordtfCal(totalWordEachUserStr.toString());
+            Map<String, Double> wordFrequencyMap = eachWordtfCal(totalWordEachUserStr.toString());
             tfMap.put(userId, wordFrequencyMap);
         }
         return tfMap;
     }
 
     /**
-     * 计算每个文档的tf值
-     *
-     * @param wordAll
+     * calculate tf value of each word
+     * @param wordAll all posts of every user
      * @return Map<String, Float> key是单词 value是tf值
      */
     public static Map<String, Double> eachWordtfCal(String wordAll) {
-        //存放（单词，单词数量）
-        HashMap<String, Integer> dict = new HashMap<String, Integer>();
-        //存放（单词，单词词频）
-        HashMap<String, Double> tf = new HashMap<String, Double>();
+        //This map(dictMap) is used to store word and count
+        HashMap<String, Integer> dictMap = new HashMap<String, Integer>();
+        //This map(tfMap) is used to store word and tf value
+        HashMap<String, Double> tfMap = new HashMap<String, Double>();
         int wordCount = 0;
 
-        /**
-         * 统计每个单词的数量，并存放到map中去
-         * 便于以后计算每个单词的词频
-         * 单词的tf=该单词出现的数量n/总的单词数wordCount
-         */
         for (String word : wordAll.split(" ")) {
             wordCount++;
-            if (dict.containsKey(word)) {
-                dict.put(word, dict.get(word) + 1);
+            if (dictMap.containsKey(word)) {
+                dictMap.put(word, dictMap.get(word) + 1);
             } else {
-                dict.put(word, 1);
+                dictMap.put(word, 1);
             }
         }
 
-        for (Map.Entry<String, Integer> entry : dict.entrySet()) {
+        for (Map.Entry<String, Integer> entry : dictMap.entrySet()) {
+            //tf = Number of times this word appears / Total number of words
             double wordTf = (double) entry.getValue() / wordCount;
-            tf.put(entry.getKey(), wordTf);
+            tfMap.put(entry.getKey(), wordTf);
         }
-        return tf;
+        return tfMap;
     }
 
-    public Map<String, Map<String, Double>> idf(Map<String, List<String>> originalMap, Map<String, Map<String, Double>> tfMap) {
+    /**
+     * calculate the idf value of each
+     * @param originalMap parsed from txt file
+     * @param tfMap tf value of each word
+     * @return OuterLayerMap -> key:userId, value: InnerLayerMap
+     *         InnerLayerMap -> key:word, value: tf value
+     */
+    public Map<String, Map<String, Double>> tfidf(Map<String, List<String>> originalMap, Map<String, Map<String, Double>> tfMap) {
         Map<String, Map<String, Double>> tfidfMap = new HashMap<>();
         SortUtil sortUtil = new SortUtil();
         for (Map.Entry<String, List<String>> entry : originalMap.entrySet()) {
             Map<String, Double> idfMap = new HashMap<>();
             List<String> list = entry.getValue();
-            //单个用户总文档数
+            //dataCount = Number of posts per user
             int dataCount = list.size();
             Map<String, Double> singleWordMap = tfMap.get(entry.getKey());
             for (Map.Entry<String, Double> singleMap : singleWordMap.entrySet()) {
@@ -80,10 +88,12 @@ public class Algorithms {
                         count++;
                     }
                 }
+                //idf = log((number of posts + 1) / )
                 double idf = Math.log((dataCount+1) / (count + 1));
                 double tfidf = singleMap.getValue() * idf;
                 idfMap.put(singleMap.getKey(), tfidf);
             }
+            //Sort the values of tf-idf in descending order
             Map<String, Double> finalIdfMap= sortUtil.sortByValueDescending(idfMap);
             tfidfMap.put(entry.getKey(), finalIdfMap);
         }

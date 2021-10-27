@@ -7,12 +7,16 @@ import java.util.List;
 /**
  * @author： Wang Zhe
  * @date： 2021/10/27 13:11
- * @description： TODO
+ * @description： Execute file
  * @modifiedBy：
  * @version: 1.0
  */
 public class TextUtil {
 
+    /**
+     * read taskdata.txt in order to process data
+     * @return List<String> a list of each post
+     */
     public List<String> loadText() {
         List<String> checkins = new ArrayList(); // List初始化
         try {

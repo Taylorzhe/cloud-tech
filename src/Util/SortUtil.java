@@ -5,12 +5,19 @@ import java.util.*;
 /**
  * @author： Wang Zhe
  * @date： 2021/10/27 20:01
- * @description： TODO
+ * @description： sort
  * @modifiedBy：
  * @version: 1.0
  */
 public class SortUtil {
 
+    /**
+     * Implemented a comparator for sorting by myself
+     * @param map
+     * @param <K>
+     * @param <V>
+     * @return
+     */
     public  <K, V extends Comparable<? super V>> Map<K, V> sortByValueDescending(Map<K, V> map) {
         List<Map.Entry<K, V>> list = new LinkedList<Map.Entry<K, V>>(map.entrySet());
         Collections.sort(list, new Comparator<Map.Entry<K, V>>() {
